@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import Reminders from "./pages/Reminders";
 import AddMood from "./pages/AddMood";
 import LogWater from "./pages/LogWater";
