@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -18,20 +18,15 @@ const emojis = [
   { label: 'Muito Triste', emoji: '😭', value: 1 }
 ]
 
-// Dados simulados
-const fakeData = [
-  { date: 'Seg', mood: 4 },
-  { date: 'Ter', mood: 3 },
-  { date: 'Qua', mood: 5 },
-  { date: 'Qui', mood: 2 },
-  { date: 'Sex', mood: 4 },
-  { date: 'Sáb', mood: 3 },
-  { date: 'Dom', mood: 5 }
-]
-
 export default function AddMood() {
   const [selectedMood, setSelectedMood] = useState(null)
+  const [moodHistory, setMoodHistory] = useState([])
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const storedData = JSON.parse(localStorage.getItem('moodHistory')) || []
+    setMoodHistory(storedData)
+  }, [])
 
   const handleSave = () => {
     if (!selectedMood) {
@@ -39,7 +34,14 @@ export default function AddMood() {
       return
     }
 
-    console.log('Humor salvo:', selectedMood)
+    const today = new Date()
+    const weekday = today.toLocaleDateString('pt-BR', { weekday: 'short' }) // ex: seg., ter.
+    const moodEntry = { date: weekday, mood: selectedMood }
+
+    const updatedHistory = [...moodHistory.slice(-6), moodEntry] // mantém últimos 7 dias
+    localStorage.setItem('moodHistory', JSON.stringify(updatedHistory))
+    setMoodHistory(updatedHistory)
+
     alert('Humor registrado com sucesso!')
     navigate('/')
   }
@@ -54,15 +56,16 @@ export default function AddMood() {
       <h2 className="text-4xl font-bold text-blue-900 mb-10">Como você está se sentindo?</h2>
 
       <div className="flex flex-wrap justify-center gap-6 mb-12">
-        {emojis.map(({ label, emoji }) => (
+        {emojis.map(({ label, emoji, value }) => (
           <button
             key={label}
-            onClick={() => setSelectedMood(label)}
+            onClick={() => setSelectedMood(value)}
+            aria-label={label}
+            aria-pressed={selectedMood === value}
             className={`text-4xl p-4 rounded-xl border transition 
-              ${selectedMood === label 
+              ${selectedMood === value 
                 ? 'bg-[#800020] border-[#800020] text-white' 
                 : 'bg-white border-gray-300 hover:bg-gray-100'}`}
-            aria-label={label}
           >
             {emoji}
           </button>
@@ -79,16 +82,16 @@ export default function AddMood() {
       <div className="w-full max-w-md h-64 bg-white p-6 rounded-lg shadow overflow-hidden">
         <h3 className="text-center text-lg font-semibold mb-4">Seu Humor na Semana</h3>
         <ResponsiveContainer width="95%" height="100%">
-        <LineChart data={fakeData} margin={{ top: 10, right: 20, bottom: 20, left: 15 }}>
+          <LineChart data={moodHistory} margin={{ top: 10, right: 20, bottom: 20, left: 15 }}>
             <XAxis dataKey="date" />
-            <YAxis 
+            <YAxis
               domain={[1, 5]}
               tick={({ x, y, payload }) => {
                 const emoji = emojis.find(e => e.value === payload.value)?.emoji || payload.value
                 return (
-                 <text x={x - 10} y={y + 6} textAnchor="end" fontSize="12">
+                  <text x={x - 10} y={y + 6} textAnchor="end" fontSize="12">
                     <tspan>{emoji}</tspan>
-                 </text>
+                  </text>
                 )
               }}
             />
