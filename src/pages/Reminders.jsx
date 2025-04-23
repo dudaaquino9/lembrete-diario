@@ -1,24 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 export default function Reminders() {
+  const navigate = useNavigate()
+
   const [moodTimes, setMoodTimes] = useState(3)
   const [waterTimes, setWaterTimes] = useState(6)
   const [breakTimes, setBreakTimes] = useState(4)
   const [startTime, setStartTime] = useState('08:00')
   const [endTime, setEndTime] = useState('22:00')
 
-  const navigate = useNavigate()
+  useEffect(() => {
+    const stored = localStorage.getItem('reminderSettings')
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      setMoodTimes(parsed.moodTimes)
+      setWaterTimes(parsed.waterTimes)
+      setBreakTimes(parsed.breakTimes)
+      setStartTime(parsed.startTime)
+      setEndTime(parsed.endTime)
+    }
+  }, [])
 
   const handleSave = () => {
-    console.log({
-      moodTimes,
-      waterTimes,
-      breakTimes,
+    const reminderSettings = {
+      moodTimes: Number(moodTimes),
+      waterTimes: Number(waterTimes),
+      breakTimes: Number(breakTimes),
       startTime,
       endTime
-    })
+    }
+
+    localStorage.setItem('reminderSettings', JSON.stringify(reminderSettings))
     alert('Lembretes salvos com sucesso!')
     navigate('/')
   }
@@ -102,7 +116,7 @@ export default function Reminders() {
 
         <button
           onClick={handleSave}
-          className="mt-8 bg-[#800020] hover:bg-[#800020] py-3 rounded-lg text-white font-semibold transition-all duration-300"
+          className="mt-8 bg-[#800020] hover:bg-[#a0002a] py-3 rounded-lg text-white font-semibold transition-all duration-300"
         >
           Salvar Lembretes
         </button>
